@@ -41,7 +41,6 @@
   </div>
 </template>
 
-
 <script>
 import { ref, computed, inject } from 'vue'
 import { useStore } from 'vuex'
@@ -73,8 +72,23 @@ export default {
 
     const sortedPlayersMPR = computed(() => {
       const inProgress = playersMPR.value.filter(player => player.status === 'In Progress')
-        .sort((a, b) => b.playsRemaining - a.playsRemaining || a.plays - b.plays)
       const completed = playersMPR.value.filter(player => player.status === 'Completed')
+
+      const sortPlayers = (a, b) => {
+        if (a.plays !== b.plays) {
+          return a.plays - b.plays // Sort by plays (ascending)
+        }
+        return a.number - b.number // Then sort by number (ascending)
+      }
+
+      inProgress.sort(sortPlayers)
+      completed.sort((a, b) => {
+        if (a.plays !== b.plays) {
+          return b.plays - a.plays // Sort by plays (descending for completed)
+        }
+        return a.number - b.number // Then sort by number (ascending)
+      })
+
       return [...inProgress, ...completed]
     })
 

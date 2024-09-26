@@ -1,3 +1,4 @@
+
 import { createStore } from 'vuex'
 
 export default createStore({
@@ -11,24 +12,18 @@ export default createStore({
   mutations: {
     addPlayer(state, player) {
       state.players.push(player)
-      state.playerPlayCounts[player.number] = 0
     },
     updatePlayer(state, { index, player }) {
       state.players.splice(index, 1, player)
     },
     removePlayer(state, number) {
       state.players = state.players.filter(p => p.number !== number)
-      delete state.playerPlayCounts[number]
     },
     setMinPlays(state, minPlays) {
       state.minPlays = minPlays
     },
     setPlayers(state, players) {
       state.players = players
-      state.playerPlayCounts = players.reduce((counts, player) => {
-        counts[player.number] = 0
-        return counts
-      }, {})
     },
     updateCurrentPlay(state, playerNumber) {
       const index = state.currentPlay.indexOf(playerNumber)
@@ -41,12 +36,24 @@ export default createStore({
     savePlay(state) {
       state.playHistory.push([...state.currentPlay])
       state.currentPlay.forEach(playerNumber => {
-        state.playerPlayCounts[playerNumber]++
+        state.playerPlayCounts[playerNumber] = (state.playerPlayCounts[playerNumber] || 0) + 1
       })
       state.currentPlay = []
     },
     updatePlayerPlayCount(state, { playerNumber, playCount }) {
       state.playerPlayCounts[playerNumber] = playCount
+    },
+    clearAllPlays(state) {
+      state.currentPlay = []
+      state.playHistory = []
+      state.playerPlayCounts = {}
+    },
+    clearAllData(state) {
+      state.players = []
+      state.minPlays = 12
+      state.currentPlay = []
+      state.playHistory = []
+      state.playerPlayCounts = {}
     }
   },
   actions: {
@@ -62,13 +69,6 @@ export default createStore({
           })
         }
       }
-    },
-    saveToLocalStorage({ state }) {
-      localStorage.setItem('teamData', JSON.stringify({
-        players: state.players,
-        minPlays: state.minPlays,
-        playerPlayCounts: state.playerPlayCounts
-      }))
     }
   },
   getters: {

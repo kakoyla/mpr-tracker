@@ -9,15 +9,17 @@
         <input type="radio" v-model="trackingMode" value="onBench"> On Bench
       </label>
     </div>
-    <div class="player-grid">
-      <button 
-        v-for="player in sortedActivePlayers" 
-        :key="player.number"
-        @click="togglePlayer(player.number)"
-        :class="{ active: isPlayerActive(player.number) }"
-      >
-        {{ player.number }}
-      </button>
+    <div class="player-grid-container" ref="gridContainer">
+      <div class="player-grid" :style="gridStyle">
+        <button 
+          v-for="player in sortedActivePlayers" 
+          :key="player.number"
+          @click="togglePlayer(player.number)"
+          :class="{ active: isPlayerActive(player.number) }"
+        >
+          {{ player.number }}
+        </button>
+      </div>
     </div>
     <div class="action-buttons">
       <button @click="savePlay" class="save-button">Save Play</button>
@@ -27,7 +29,7 @@
 </template>
 
 <script>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, onMounted, onUnmounted, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 
@@ -39,6 +41,8 @@ export default {
     const saveData = inject('saveData')
 
     const trackingMode = ref('onField')
+    const gridContainer = ref(null)
+    const gridStyle = ref({})
 
     const players = computed(() => store.state.players)
     const currentPlay = computed(() => store.state.currentPlay)
@@ -75,11 +79,52 @@ export default {
       
       store.commit('savePlay')
       saveData()
+      // Call updateGridLayout after saving the play
+      updateGridLayout()
     }
 
     const viewTeamMPR = () => {
       router.push('/team-mpr')
     }
+
+    const updateGridLayout = () => {
+      if (!gridContainer.value) return
+
+      const containerWidth = gridContainer.value.clientWidth
+      const containerHeight = gridContainer.value.clientHeight
+      const playerCount = sortedActivePlayers.value.length
+
+      let columns = Math.ceil(Math.sqrt(playerCount))
+      let rows = Math.ceil(playerCount / columns)
+
+      // Adjust for portrait mode
+      if (containerHeight > containerWidth) {
+        [columns, rows] = [rows, columns]
+      }
+
+      gridStyle.value = {
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gridTemplateRows: `repeat(${rows}, 1fr)`,
+        gap: '4px',
+        height: '100%',
+      }
+    }
+
+    onMounted(() => {
+      updateGridLayout()
+      window.addEventListener('resize', updateGridLayout)
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('resize', updateGridLayout)
+    })
+
+    // Watch for changes in sortedActivePlayers and update layout
+    watch(sortedActivePlayers, updateGridLayout)
+
+    // Watch for changes in trackingMode and update layout
+    watch(trackingMode, updateGridLayout)
 
     return {
       trackingMode,
@@ -87,7 +132,9 @@ export default {
       isPlayerActive,
       togglePlayer,
       savePlay,
-      viewTeamMPR
+      viewTeamMPR,
+      gridContainer,
+      gridStyle
     }
   }
 }
@@ -95,10 +142,16 @@ export default {
 
 <style scoped>
 .player-tracking {
-  background-color: white;
-  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   padding: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
 }
 
 .tracking-mode {
@@ -118,23 +171,26 @@ export default {
   margin-right: 0.5rem;
 }
 
-.player-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-  gap: 0.5rem;
+.player-grid-container {
+  flex-grow: 1;
+  overflow: hidden;
   margin-bottom: 1rem;
 }
 
 .player-grid button {
-  aspect-ratio: 1;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   background-color: #ecf0f1;
   color: var(--text-color);
   border: 2px solid var(--border-color);
   transition: all 0.3s;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .player-grid button:hover {
@@ -150,19 +206,17 @@ export default {
 .action-buttons {
   display: flex;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
 .save-button, .view-mpr-button {
-  padding: 0.5rem 1rem;
+  flex: 1;
+  padding: 0.75rem;
   font-size: 1rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
-  flex: 1;
-  min-width: 120px;
 }
 
 .save-button {
@@ -184,14 +238,6 @@ export default {
 }
 
 @media (max-width: 480px) {
-  .player-grid {
-    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-  }
-
-  .player-grid button {
-    font-size: 1rem;
-  }
-
   .action-buttons {
     flex-direction: column;
   }

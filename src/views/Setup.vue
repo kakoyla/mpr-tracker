@@ -33,7 +33,9 @@
     </div>
     
     <div class="clear-data">
-      <button @click="clearAllData" class="clear-data-button">Clear All Data</button>
+      <h3>Clear Data Options</h3>
+      <button @click="clearAllPlays" class="clear-plays-button">Clear All Plays</button>
+      <button @click="clearEntireTeam" class="clear-team-button">Remove Entire Team</button>
     </div>
   </div>
 </template>
@@ -150,12 +152,20 @@ export default {
       }
     }
 
-    const clearAllData = () => {
-      if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+    const clearAllPlays = () => {
+      if (confirm('Are you sure you want to clear all plays? This action cannot be undone.')) {
+        store.commit('clearAllPlays')
+        saveData()
+        alert('All plays have been cleared.')
+      }
+    }
+
+    const clearEntireTeam = () => {
+      if (confirm('Are you sure you want to remove the entire team and all data? This action cannot be undone.')) {
         store.commit('clearAllData')
         minPlays.value = 12 // Reset to default
         saveData()
-        alert('All data has been cleared.')
+        alert('The entire team and all data have been removed.')
       }
     }
 
@@ -173,7 +183,8 @@ export default {
       saveTeam,
       exportTeam,
       importTeam,
-      clearAllData
+      clearAllPlays,
+      clearEntireTeam
     }
   }
 }
@@ -264,19 +275,35 @@ export default {
   margin-top: 2rem;
 }
 
-.clear-data-button {
+.clear-data h3 {
+  margin-bottom: 1rem;
+}
+
+.clear-plays-button, .clear-team-button {
   width: 100%;
   padding: 0.75rem;
   font-size: 1.1rem;
-  background-color: #e74c3c;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
+  margin-bottom: 1rem;
 }
 
-.clear-data-button:hover {
+.clear-plays-button {
+  background-color: #f39c12; /* Orange */
+}
+
+.clear-plays-button:hover {
+  background-color: #d35400;
+}
+
+.clear-team-button {
+  background-color: #e74c3c; /* Red */
+}
+
+.clear-team-button:hover {
   background-color: #c0392b;
 }
 
