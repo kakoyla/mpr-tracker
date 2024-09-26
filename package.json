@@ -43,7 +43,7 @@
     "not dead",
     "not ie 11"
   ]
-  "scripts": {
+  scripts: {
     "deploy": "npm run build && gh-pages -d dist"
   }
 }
