@@ -24,7 +24,7 @@
       <label for="minPlays">Minimum Plays Required:</label>
       <input id="minPlays" v-model.number="minPlays" type="number" required>
     </div>
-    <button @click="saveTeam" :disabled="!canSaveTeam" class="save-team-button">Save Team</button>
+    <button @click="saveTeam" :disabled="!canSaveTeam" class="save-team-button">Save</button>
     
     <div class="export-import">
       <button @click="exportTeam" class="export-button">Export Team</button>

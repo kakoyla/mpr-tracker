@@ -8,7 +8,7 @@
             <th>No.</th>
             <th>Name</th>
             <th>Plays</th>
-            <th>Rem.</th>
+            <th>Left</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
