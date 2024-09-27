@@ -78,7 +78,7 @@ export default {
         if (a.plays !== b.plays) {
           return a.plays - b.plays // Sort by plays (ascending)
         }
-        return a.number - b.number // Then sort by number (ascending)
+        return b.number - a.number // Then sort by number (descending)
       }
 
       inProgress.sort(sortPlayers)
@@ -86,7 +86,7 @@ export default {
         if (a.plays !== b.plays) {
           return b.plays - a.plays // Sort by plays (descending for completed)
         }
-        return a.number - b.number // Then sort by number (ascending)
+        return b.number - a.number // Then sort by number (descending)
       })
 
       return [...inProgress, ...completed]
@@ -132,19 +132,29 @@ export default {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+h2 {
+  color: var(--text-color);
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
 .table-responsive {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
 }
 
 table {
   width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 th, td {
-  padding: 0.5rem;
+  padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
 }
@@ -156,48 +166,61 @@ th {
   white-space: nowrap;
 }
 
+tr:nth-child(even) {
+  background-color: var(--background-color);
+}
+
 tr.completed {
   background-color: #e8f5e9;
 }
 
 td.status-completed {
   font-weight: bold;
-  color: #2e7d32;
+  color: var(--success-color);
 }
 
 input[type="number"] {
   width: 60px;
   padding: 0.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
 }
 
 .edit-button, .save-button, .cancel-button {
   padding: 0.25rem 0.5rem;
   margin: 0 0.25rem;
   font-size: 0.9rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .edit-button {
-  background-color: #f39c12;
+  background-color: var(--secondary-color);
+  color: white;
 }
 
 .edit-button:hover {
-  background-color: #e67e22;
+  background-color: #4ca8a6;
 }
 
 .save-button {
-  background-color: var(--secondary-color);
+  background-color: var(--success-color);
+  color: white;
 }
 
 .save-button:hover {
-  background-color: #27ae60;
+  background-color: #35a581;
 }
 
 .cancel-button {
-  background-color: #e74c3c;
+  background-color: var(--error-color);
+  color: white;
 }
 
 .cancel-button:hover {
-  background-color: #c0392b;
+  background-color: #c13c3c;
 }
 
 .back-button {
@@ -211,11 +234,10 @@ input[type="number"] {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin-top: 1rem;
 }
 
 .back-button:hover {
-  background-color: #2980b9;
+  background-color: #2a3d50;
 }
 
 @media (max-width: 768px) {
@@ -228,7 +250,7 @@ input[type="number"] {
   }
 
   th, td {
-    padding: 0.25rem;
+    padding: 0.5rem;
   }
 
   .edit-button, .save-button, .cancel-button {
@@ -239,22 +261,6 @@ input[type="number"] {
   .back-button {
     padding: 0.5rem 1rem;
     font-size: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  th, td {
-    padding: 0.2rem;
-  }
-
-  input[type="number"] {
-    width: 40px;
-  }
-
-  .edit-button, .save-button, .cancel-button {
-    padding: 0.15rem 0.3rem;
-    font-size: 0.7rem;
-    margin: 0 0.1rem;
   }
 }
 </style>

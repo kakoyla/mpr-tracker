@@ -51,21 +51,20 @@ export default {
 
 <style>
 :root {
-  --primary-color: #3498db;
-  --secondary-color: #2ecc71;
-  --background-color: #ecf0f1;
-  --text-color: #34495e;
-  --border-color: #bdc3c7;
+  --primary-color: #3a506b;
+  --secondary-color: #5bc0be;
+  --background-color: #f0f5f9;
+  --text-color: #1c2541;
+  --border-color: #c9d6df;
+  --active-color: #0b132b;
+  --error-color: #d64545;
+  --success-color: #3ebd93;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
-
-html, body {
-  height: 100%;
 }
 
 body {
@@ -90,14 +89,12 @@ header {
 
 header h1 {
   margin-bottom: 1rem;
-  font-size: 1.5rem;
 }
 
 nav {
   display: flex;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 nav a {
@@ -110,16 +107,15 @@ nav a {
 
 nav a:hover,
 nav a.router-link-active {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--active-color);
 }
 
 main {
   flex-grow: 1;
-  padding: 1rem;
-  max-width: 100%;
+  padding: 2rem;
+  max-width: 800px;
   margin: 0 auto;
   width: 100%;
-  overflow-x: hidden;
 }
 
 footer {
@@ -132,7 +128,7 @@ footer {
 
 button {
   background-color: var(--secondary-color);
-  color: white;
+  color: var(--text-color);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
@@ -141,7 +137,7 @@ button {
 }
 
 button:hover {
-  background-color: #27ae60;
+  background-color: #4ca8a6;
 }
 
 input[type="text"],
@@ -151,12 +147,14 @@ input[type="number"] {
   margin-bottom: 1rem;
   border: 1px solid var(--border-color);
   border-radius: 4px;
+  background-color: white;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
+  background-color: white;
 }
 
 th, td {
@@ -170,26 +168,11 @@ th {
   color: white;
 }
 
-@media (max-width: 768px) {
-  header h1 {
-    font-size: 1.2rem;
-  }
+.error {
+  color: var(--error-color);
+}
 
-  nav a {
-    padding: 0.3rem 0.7rem;
-    font-size: 0.9rem;
-  }
-
-  main {
-    padding: 0.5rem;
-  }
-
-  table {
-    font-size: 0.9rem;
-  }
-
-  th, td {
-    padding: 0.3rem;
-  }
+.success {
+  color: var(--success-color);
 }
 </style>

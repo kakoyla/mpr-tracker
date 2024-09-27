@@ -79,7 +79,6 @@ export default {
       
       store.commit('savePlay')
       saveData()
-      // Call updateGridLayout after saving the play
       updateGridLayout()
     }
 
@@ -120,10 +119,7 @@ export default {
       window.removeEventListener('resize', updateGridLayout)
     })
 
-    // Watch for changes in sortedActivePlayers and update layout
     watch(sortedActivePlayers, updateGridLayout)
-
-    // Watch for changes in trackingMode and update layout
     watch(trackingMode, updateGridLayout)
 
     return {
@@ -147,9 +143,13 @@ export default {
   height: 100vh;
   padding: 1rem;
   box-sizing: border-box;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 h2 {
+  color: var(--text-color);
   margin-top: 0;
   margin-bottom: 1rem;
 }
@@ -165,6 +165,7 @@ h2 {
   display: flex;
   align-items: center;
   cursor: pointer;
+  color: var(--text-color);
 }
 
 .tracking-mode input[type="radio"] {
@@ -173,34 +174,40 @@ h2 {
 
 .player-grid-container {
   flex-grow: 1;
-  overflow: hidden;
+  overflow-y: auto;
   margin-bottom: 1rem;
 }
 
+.player-grid {
+  display: grid;
+  gap: 0.5rem;
+  height: 100%;
+}
+
 .player-grid button {
+  aspect-ratio: 1 / 1;
   font-size: 1.5rem;
   font-weight: bold;
-  background-color: #ecf0f1;
+  background-color: var(--background-color);
   color: var(--text-color);
   border: 2px solid var(--border-color);
   transition: all 0.3s;
   cursor: pointer;
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0;
-  width: 100%;
-  height: 100%;
 }
 
 .player-grid button:hover {
-  background-color: #d5dbdb;
+  background-color: var(--secondary-color);
+  color: white;
 }
 
 .player-grid button.active {
-  background-color: var(--secondary-color);
+  background-color: var(--primary-color);
   color: white;
-  border-color: var(--secondary-color);
+  border-color: var(--active-color);
 }
 
 .action-buttons {
@@ -220,12 +227,12 @@ h2 {
 }
 
 .save-button {
-  background-color: var(--secondary-color);
+  background-color: var(--success-color);
   color: white;
 }
 
 .save-button:hover {
-  background-color: #27ae60;
+  background-color: #35a581;
 }
 
 .view-mpr-button {
@@ -234,10 +241,24 @@ h2 {
 }
 
 .view-mpr-button:hover {
-  background-color: #2980b9;
+  background-color: #2a3d50;
+}
+
+@media (max-width: 768px) {
+  .player-grid button {
+    font-size: 1.2rem;
+  }
 }
 
 @media (max-width: 480px) {
+  .player-tracking {
+    padding: 0.5rem;
+  }
+
+  .player-grid button {
+    font-size: 1rem;
+  }
+
   .action-buttons {
     flex-direction: column;
   }

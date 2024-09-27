@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import TeamSetup from '../views/Setup.vue'
 import PlayerTracking from '../views/PlayerTracking.vue'
 import TeamMPR from '../views/TeamMPR.vue'
@@ -6,7 +6,7 @@ import TeamMPR from '../views/TeamMPR.vue'
 const routes = [
   {
     path: '/',
-    name: TeamSetup,
+    name: 'TeamSetup',
     component: TeamSetup
   },
   {
@@ -22,7 +22,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHashHistory(),
   routes
 })
 

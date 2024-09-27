@@ -11,7 +11,7 @@
     <div class="team-roster">
       <h3>Team Roster</h3>
       <ul>
-        <li v-for="player in players" :key="player.number">
+        <li v-for="player in sortedPlayers" :key="player.number">
           <span>{{ player.number }} - {{ player.firstName }} {{ player.lastName }}</span>
           <div>
             <button @click="editPlayer(player)" class="edit-button">Edit</button>
@@ -58,6 +58,10 @@ export default {
     const editingIndex = ref(-1)
 
     const players = computed(() => store.state.players)
+
+    const sortedPlayers = computed(() => {
+      return [...players.value].sort((a, b) => a.number - b.number)
+    })
 
     const capitalizeFirstLetter = (string) => {
       return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase()
@@ -171,7 +175,7 @@ export default {
 
     return {
       newPlayer,
-      players,
+      sortedPlayers,
       minPlays,
       editMode,
       addPlayer,
@@ -230,6 +234,12 @@ export default {
   padding: 0.75rem;
   font-size: 1.1rem;
   margin-bottom: 1rem;
+  background-color: var(--success-color);
+  color: white;
+}
+
+.save-team-button:hover {
+  background-color: #35a581;
 }
 
 .export-import {
@@ -250,21 +260,21 @@ export default {
 }
 
 .export-button {
-  background-color: #3498db; /* Blue color */
-  color: white;
+  background-color: var(--secondary-color);
+  color: var(--text-color);
 }
 
 .export-button:hover {
-  background-color: #2980b9;
+  background-color: #4ca8a6;
 }
 
 .import-button {
-  background-color: #9b59b6; /* Purple color */
+  background-color: var(--primary-color);
   color: white;
 }
 
 .import-button:hover {
-  background-color: #8e44ad;
+  background-color: #2a3d50;
 }
 
 .export-button:active, .import-button:active {
@@ -292,43 +302,46 @@ export default {
 }
 
 .clear-plays-button {
-  background-color: #f39c12; /* Orange */
+  background-color: var(--secondary-color);
 }
 
 .clear-plays-button:hover {
-  background-color: #d35400;
+  background-color: #4ca8a6;
 }
 
 .clear-team-button {
-  background-color: #e74c3c; /* Red */
+  background-color: var(--error-color);
 }
 
 .clear-team-button:hover {
-  background-color: #c0392b;
+  background-color: #c13c3c;
 }
 
 .cancel-button {
-  background-color: #e74c3c;
+  background-color: var(--error-color);
+  color: white;
 }
 
 .cancel-button:hover {
-  background-color: #c0392b;
+  background-color: #c13c3c;
 }
 
 .edit-button {
-  background-color: #f39c12;
+  background-color: var(--secondary-color);
+  color: var(--text-color);
 }
 
 .edit-button:hover {
-  background-color: #d35400;
+  background-color: #4ca8a6;
 }
 
 .remove-button {
-  background-color: #e74c3c;
+  background-color: var(--error-color);
+  color: white;
 }
 
 .remove-button:hover {
-  background-color: #c0392b;
+  background-color: #c13c3c;
 }
 
 @media (max-width: 480px) {
