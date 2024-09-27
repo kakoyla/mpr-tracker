@@ -140,25 +140,28 @@ export default {
 .player-tracking {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  padding: 1rem;
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 h2 {
   color: var(--text-color);
-  margin-top: 0;
-  margin-bottom: 1rem;
+  margin: 0.5rem 0;
+  padding: 0 0.5rem;
 }
 
 .tracking-mode {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
 }
 
 .tracking-mode label {
@@ -175,7 +178,8 @@ h2 {
 .player-grid-container {
   flex-grow: 1;
   overflow-y: auto;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
 }
 
 .player-grid {
@@ -214,6 +218,7 @@ h2 {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
+  padding: 0.5rem;
 }
 
 .save-button, .view-mpr-button {
@@ -252,7 +257,7 @@ h2 {
 
 @media (max-width: 480px) {
   .player-tracking {
-    padding: 0.5rem;
+    padding: 0.25rem;
   }
 
   .player-grid button {

@@ -8,7 +8,7 @@
             <th>No.</th>
             <th>Name</th>
             <th>Plays</th>
-            <th>Remaining</th>
+            <th>Rem.</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -40,6 +40,7 @@
     <button @click="backToTracking" class="back-button">Back to Tracking</button>
   </div>
 </template>
+
 
 <script>
 import { ref, computed, inject } from 'vue'
@@ -128,20 +129,27 @@ export default {
 .team-mpr {
   background-color: white;
   border-radius: 8px;
-  padding: 1rem;
+  padding: 0.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 h2 {
   color: var(--text-color);
-  margin-top: 0;
-  margin-bottom: 1rem;
+  margin: 0 0 0.5rem 0;
 }
 
 .table-responsive {
+  flex-grow: 1;
   overflow-x: auto;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 table {
@@ -150,11 +158,10 @@ table {
   border-spacing: 0;
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  overflow: hidden;
 }
 
 th, td {
-  padding: 0.75rem;
+  padding: 0.5rem;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
 }
@@ -180,7 +187,7 @@ td.status-completed {
 }
 
 input[type="number"] {
-  width: 60px;
+  width: 50px;
   padding: 0.25rem;
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -189,7 +196,7 @@ input[type="number"] {
 .edit-button, .save-button, .cancel-button {
   padding: 0.25rem 0.5rem;
   margin: 0 0.25rem;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -242,7 +249,7 @@ input[type="number"] {
 
 @media (max-width: 768px) {
   .team-mpr {
-    padding: 0.5rem;
+    padding: 0.25rem;
   }
 
   table {
@@ -250,12 +257,13 @@ input[type="number"] {
   }
 
   th, td {
-    padding: 0.5rem;
+    padding: 0.25rem;
   }
 
   .edit-button, .save-button, .cancel-button {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.8rem;
+    padding: 0.15rem 0.3rem;
+    font-size: 0.7rem;
+    margin: 0 0.1rem;
   }
 
   .back-button {
