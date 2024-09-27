@@ -78,7 +78,7 @@ export default {
         if (a.plays !== b.plays) {
           return a.plays - b.plays // Sort by plays (ascending)
         }
-        return b.number - a.number // Then sort by number (descending)
+        return a.number - b.number // Then sort by number (ascending)
       }
 
       inProgress.sort(sortPlayers)
@@ -86,7 +86,7 @@ export default {
         if (a.plays !== b.plays) {
           return b.plays - a.plays // Sort by plays (descending for completed)
         }
-        return b.number - a.number // Then sort by number (descending)
+        return a.number - b.number // Then sort by number (descending)
       })
 
       return [...inProgress, ...completed]
