@@ -1,4 +1,3 @@
-
 import { createStore } from 'vuex'
 
 export default createStore({
@@ -7,7 +6,8 @@ export default createStore({
     minPlays: 0,
     currentPlay: [],
     playHistory: [],
-    playerPlayCounts: {}
+    playerPlayCounts: {},
+    selectedPlayers: []
   },
   mutations: {
     addPlayer(state, player) {
@@ -33,9 +33,9 @@ export default createStore({
         state.currentPlay.push(playerNumber)
       }
     },
-    savePlay(state) {
-      state.playHistory.push([...state.currentPlay])
-      state.currentPlay.forEach(playerNumber => {
+    savePlay(state, playersToUpdate) {
+      state.playHistory.push([...playersToUpdate])
+      playersToUpdate.forEach(playerNumber => {
         state.playerPlayCounts[playerNumber] = (state.playerPlayCounts[playerNumber] || 0) + 1
       })
       state.currentPlay = []
@@ -54,13 +54,17 @@ export default createStore({
       state.currentPlay = []
       state.playHistory = []
       state.playerPlayCounts = {}
+      state.selectedPlayers = []
+    },
+    setSelectedPlayers(state, players) {
+      state.selectedPlayers = players
     }
   },
   actions: {
     initializeStore({ commit }) {
       const storedData = localStorage.getItem('teamData')
       if (storedData) {
-        const { players, minPlays, playerPlayCounts } = JSON.parse(storedData)
+        const { players, minPlays, playerPlayCounts, selectedPlayers } = JSON.parse(storedData)
         commit('setPlayers', players)
         commit('setMinPlays', minPlays)
         if (playerPlayCounts) {
@@ -68,7 +72,18 @@ export default createStore({
             commit('updatePlayerPlayCount', { playerNumber: parseInt(playerNumber), playCount: count })
           })
         }
+        if (selectedPlayers) {
+          commit('setSelectedPlayers', selectedPlayers)
+        }
       }
+    },
+    saveToLocalStorage({ state }) {
+      localStorage.setItem('teamData', JSON.stringify({
+        players: state.players,
+        minPlays: state.minPlays,
+        playerPlayCounts: state.playerPlayCounts,
+        selectedPlayers: state.selectedPlayers
+      }))
     }
   },
   getters: {

@@ -2,12 +2,11 @@
   <div class="player-tracking">
     <h2>Player Tracking</h2>
     <div class="tracking-mode">
-      <label>
-        <input type="radio" v-model="trackingMode" value="onField"> On Field
+      <label class="switch">
+        <input type="checkbox" v-model="isOnField">
+        <span class="slider round"></span>
       </label>
-      <label>
-        <input type="radio" v-model="trackingMode" value="onBench"> On Bench
-      </label>
+      <span>{{ isOnField ? 'On Field' : 'On Bench' }}</span>
     </div>
     <div class="player-grid-container" ref="gridContainer">
       <div class="player-grid" :style="gridStyle">
@@ -25,6 +24,7 @@
       <button @click="savePlay" class="save-button">Save Play</button>
       <button @click="viewTeamMPR" class="view-mpr-button">View Team MPR</button>
     </div>
+    <div v-if="showSaved" class="saved-message">Saved</div>
   </div>
 </template>
 
@@ -40,46 +40,68 @@ export default {
     const router = useRouter()
     const saveData = inject('saveData')
 
-    const trackingMode = ref('onField')
+    const isOnField = ref(true)
     const gridContainer = ref(null)
     const gridStyle = ref({})
+    const showSaved = ref(false)
+    
+    const selectedPlayers = computed({
+      get: () => store.state.selectedPlayers,
+      set: (value) => store.commit('setSelectedPlayers', value)
+    })
 
     const players = computed(() => store.state.players)
-    const currentPlay = computed(() => store.state.currentPlay)
     const minPlays = computed(() => store.state.minPlays)
 
     const sortedActivePlayers = computed(() => {
       return players.value
         .filter(player => {
           const playCount = store.getters.playerPlayCount(player.number)
-          return trackingMode.value === 'onBench' || playCount < minPlays.value
+          return playCount < minPlays.value
         })
         .sort((a, b) => a.number - b.number)
     })
 
     const isPlayerActive = (number) => {
-      return trackingMode.value === 'onField' 
-        ? currentPlay.value.includes(number)
-        : !currentPlay.value.includes(number)
+      return selectedPlayers.value.includes(number)
     }
 
     const togglePlayer = (number) => {
-      store.commit('updateCurrentPlay', number)
+      const newSelectedPlayers = [...selectedPlayers.value]
+      const index = newSelectedPlayers.indexOf(number)
+      if (index > -1) {
+        newSelectedPlayers.splice(index, 1)
+      } else {
+        newSelectedPlayers.push(number)
+      }
+      selectedPlayers.value = newSelectedPlayers
     }
 
     const savePlay = () => {
-      const activeCount = trackingMode.value === 'onField' 
-        ? currentPlay.value.length 
-        : sortedActivePlayers.value.length - currentPlay.value.length
+      const activeCount = isOnField.value ? selectedPlayers.value.length : sortedActivePlayers.value.length - selectedPlayers.value.length
       
       if (activeCount > 11) {
         const confirmed = confirm("There are more than 11 players on the field. Do you want to proceed?")
         if (!confirmed) return
       }
       
-      store.commit('savePlay')
+      const playersToUpdate = isOnField.value ? selectedPlayers.value : sortedActivePlayers.value.filter(player => !selectedPlayers.value.includes(player.number)).map(player => player.number)
+      
+      store.commit('savePlay', playersToUpdate)
       saveData()
       updateGridLayout()
+
+      // Remove players who have completed their requirements
+      selectedPlayers.value = selectedPlayers.value.filter(number => {
+        const playCount = store.getters.playerPlayCount(number)
+        return playCount < minPlays.value
+      })
+
+      // Show "Saved" message
+      showSaved.value = true
+      setTimeout(() => {
+        showSaved.value = false
+      }, 1000)
     }
 
     const viewTeamMPR = () => {
@@ -120,17 +142,20 @@ export default {
     })
 
     watch(sortedActivePlayers, updateGridLayout)
-    watch(trackingMode, updateGridLayout)
+    watch(isOnField, () => {
+      selectedPlayers.value = []
+    })
 
     return {
-      trackingMode,
+      isOnField,
       sortedActivePlayers,
       isPlayerActive,
       togglePlayer,
       savePlay,
       viewTeamMPR,
       gridContainer,
-      gridStyle
+      gridStyle,
+      showSaved
     }
   }
 }
@@ -148,6 +173,7 @@ export default {
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  position: relative;
 }
 
 h2 {
@@ -159,20 +185,61 @@ h2 {
 .tracking-mode {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 1rem;
   margin-bottom: 0.5rem;
   padding: 0 0.5rem;
 }
 
-.tracking-mode label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  color: var(--text-color);
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
 }
 
-.tracking-mode input[type="radio"] {
-  margin-right: 0.5rem;
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }
 
 .player-grid-container {
@@ -247,6 +314,24 @@ h2 {
 
 .view-mpr-button:hover {
   background-color: #2a3d50;
+}
+
+.saved-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  animation: fadeInOut 1s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 
 @media (max-width: 768px) {
