@@ -5,8 +5,12 @@
       <input v-model="newPlayer.firstName" placeholder="First Name" required>
       <input v-model="newPlayer.lastName" placeholder="Last Name" required>
       <input v-model.number="newPlayer.number" type="number" placeholder="Player Number" required>
-      <button type="submit">{{ editMode ? 'Update Player' : 'Add Player' }}</button>
-      <button v-if="editMode" type="button" @click="cancelEdit" class="cancel-button">Cancel</button>
+      <button v-if="!editMode" type="submit">Add Player</button>
+      <template v-else>
+        <button @click="editPlayerLineups(newPlayer.number)" type="button" class="edit-lineups-button">Edit Lineups</button>
+        <button type="submit" class="update-player-button">Update Player</button>
+        <button type="button" @click="cancelEdit" class="cancel-button">Cancel</button>
+      </template>
     </form>
     <div class="team-roster">
       <h3>Team Roster</h3>
@@ -16,7 +20,6 @@
           <div>
             <button @click="editPlayer(player)" class="edit-button">Edit</button>
             <button @click="removePlayer(player.number)" class="remove-button">Remove</button>
-            <button @click="editPlayerLineups(player.number)" class="edit-lineups-button">Edit Lineups</button>
           </div>
         </li>
       </ul>
@@ -101,10 +104,10 @@
         <ul>
           <li v-for="(lineup, index) in playerLineups" :key="index">
             {{ lineup.name }}
-            <button @click="removePlayerFromLineup(index)">Remove from Lineup</button>
+            <button @click="removePlayerFromLineup(index)" class="remove-button">Remove from Lineup</button>
           </li>
         </ul>
-        <button @click="closePlayerLineupsModal">Close</button>
+        <button @click="closePlayerLineupsModal" class="update-button">Update</button>
       </div>
     </div>
   </div>
@@ -165,6 +168,8 @@ export default {
       newPlayer.value = { ...player }
       editMode.value = true
       editingIndex.value = players.value.findIndex(p => p.number === player.number)
+      // Scroll to top of the page
+      window.scrollTo(0, 0)
     }
 
     const updatePlayer = () => {
@@ -202,7 +207,7 @@ export default {
         players: players.value,
         minPlays: minPlays.value,
         playerPlayCounts: store.state.playerPlayCounts,
-        lineups: store.state.lineups // Include lineups in the export
+        lineups: store.state.lineups
       }
       const jsonString = JSON.stringify(data, null, 2)
       const blob = new Blob([jsonString], { type: 'application/json' })
@@ -254,7 +259,7 @@ export default {
     const clearEntireTeam = () => {
       if (confirm('Are you sure you want to remove the entire team, all plays, and all lineups? This action cannot be undone.')) {
         store.commit('clearAllData')
-        store.commit('clearLineups') // New mutation to clear lineups
+        store.commit('clearLineups')
         minPlays.value = 12 // Reset to default
         saveData()
         alert('The entire team, all plays, and all lineups have been removed.')
@@ -413,7 +418,8 @@ h2, h3 {
 }
 
 .player-form {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
   margin-bottom: 2rem;
 }
@@ -422,6 +428,32 @@ h2, h3 {
   padding: 0.5rem;
   border: 1px solid var(--border-color);
   border-radius: 4px;
+}
+
+.player-form button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.edit-lineups-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.edit-lineups-button:hover {
+  background-color: #2a3d50;
+}
+
+.update-player-button {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.update-player-button:hover {
+  background-color: #35a581;
 }
 
 .team-roster ul {
@@ -443,21 +475,6 @@ h2, h3 {
 
 .min-plays {
   margin-bottom: 1rem;
-}
-
-.min-plays input {
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-}
-
-button {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  font-weight: bold;
 }
 
 .save-team-button {
@@ -559,15 +576,6 @@ button {
   background-color: #c13c3c;
 }
 
-.edit-lineups-button {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.edit-lineups-button:hover {
-  background-color: #2a3d50;
-}
-
 .lineup-management {
   margin-top: 2rem;
 }
@@ -648,6 +656,20 @@ button {
 
 .modal-content button {
   margin-right: 0.5rem;
+}
+
+.update-button {
+  background-color: var(--success-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.update-button:hover {
+  background-color: #35a581;
 }
 
 @media (max-width: 768px) {
