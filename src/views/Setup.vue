@@ -16,6 +16,7 @@
           <div>
             <button @click="editPlayer(player)" class="edit-button">Edit</button>
             <button @click="removePlayer(player.number)" class="remove-button">Remove</button>
+            <button @click="editPlayerLineups(player.number)" class="edit-lineups-button">Edit Lineups</button>
           </div>
         </li>
       </ul>
@@ -37,9 +38,77 @@
       <button @click="clearAllPlays" class="clear-plays-button">Clear All Plays</button>
       <button @click="clearEntireTeam" class="clear-team-button">Remove Entire Team</button>
     </div>
+
+    <div class="lineup-management">
+      <h3>Lineup Management</h3>
+      <button @click="showLineupModal = true" class="create-lineup-button">Create Lineup</button>
+      <button @click="showEditLineupModal = true" class="edit-lineup-button">Edit Lineup</button>
+    </div>
+
+    <!-- Create Lineup Modal -->
+    <div v-if="showLineupModal" class="modal">
+      <div class="modal-content">
+        <h3>Create Lineup</h3>
+        <input v-model="newLineupName" placeholder="Lineup Name" required>
+        <div class="player-selection">
+          <button 
+            v-for="player in sortedPlayers" 
+            :key="player.number"
+            @click="togglePlayerInLineup(player.number)"
+            :class="{ selected: newLineupPlayers.includes(player.number) }"
+          >
+            {{ player.number }} - {{ player.firstName }} {{ player.lastName }}
+          </button>
+        </div>
+        <p>Selected Players: {{ newLineupPlayers.length }}/11</p>
+        <button @click="saveLineup" :disabled="!canSaveLineup">Save Lineup</button>
+        <button @click="closeLineupModal">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Edit Lineup Modal -->
+    <div v-if="showEditLineupModal" class="modal">
+      <div class="modal-content">
+        <h3>Edit Lineup</h3>
+        <select v-model="editingLineupIndex">
+          <option v-for="(lineup, index) in lineups" :key="index" :value="index">
+            {{ lineup.name }}
+          </option>
+        </select>
+        <input v-if="editingLineupIndex !== null" v-model="lineups[editingLineupIndex].name" placeholder="Lineup Name" required>
+        <div v-if="editingLineupIndex !== null" class="player-selection">
+          <button 
+            v-for="player in sortedPlayers" 
+            :key="player.number"
+            @click="togglePlayerInEditingLineup(player.number)"
+            :class="{ selected: lineups[editingLineupIndex].players.includes(player.number) }"
+          >
+            {{ player.number }} - {{ player.firstName }} {{ player.lastName }}
+          </button>
+        </div>
+        <p v-if="editingLineupIndex !== null">Selected Players: {{ lineups[editingLineupIndex].players.length }}/11</p>
+        <button @click="updateLineup" :disabled="!canUpdateLineup">Update Lineup</button>
+        <button @click="deleteLineup" v-if="editingLineupIndex !== null">Delete Lineup</button>
+        <button @click="closeEditLineupModal">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Edit Player Lineups Modal -->
+    <div v-if="showPlayerLineupsModal" class="modal">
+      <div class="modal-content">
+        <h3>Edit Player Lineups</h3>
+        <p>Player: {{ players.find(p => p.number === editingPlayerNumber)?.firstName }} {{ players.find(p => p.number === editingPlayerNumber)?.lastName }}</p>
+        <ul>
+          <li v-for="(lineup, index) in playerLineups" :key="index">
+            {{ lineup.name }}
+            <button @click="removePlayerFromLineup(index)">Remove from Lineup</button>
+          </li>
+        </ul>
+        <button @click="closePlayerLineupsModal">Close</button>
+      </div>
+    </div>
   </div>
 </template>
-
 <script>
 import { ref, computed, inject } from 'vue'
 import { useStore } from 'vuex'
@@ -57,10 +126,24 @@ export default {
     const editMode = ref(false)
     const editingIndex = ref(-1)
 
+    const showLineupModal = ref(false)
+    const showEditLineupModal = ref(false)
+    const showPlayerLineupsModal = ref(false)
+    const newLineupName = ref('')
+    const newLineupPlayers = ref([])
+    const editingLineupIndex = ref(null)
+    const editingPlayerNumber = ref(null)
+
     const players = computed(() => store.state.players)
+    const lineups = computed(() => store.state.lineups)
 
     const sortedPlayers = computed(() => {
       return [...players.value].sort((a, b) => a.number - b.number)
+    })
+
+    const playerLineups = computed(() => {
+      if (editingPlayerNumber.value === null) return []
+      return store.getters.getLineupsByPlayer(editingPlayerNumber.value)
     })
 
     const capitalizeFirstLetter = (string) => {
@@ -118,7 +201,8 @@ export default {
       const data = {
         players: players.value,
         minPlays: minPlays.value,
-        playerPlayCounts: store.state.playerPlayCounts
+        playerPlayCounts: store.state.playerPlayCounts,
+        lineups: store.state.lineups // Include lineups in the export
       }
       const jsonString = JSON.stringify(data, null, 2)
       const blob = new Blob([jsonString], { type: 'application/json' })
@@ -144,6 +228,9 @@ export default {
                 store.commit('updatePlayerPlayCount', { playerNumber: parseInt(playerNumber), playCount: count })
               })
             }
+            if (data.lineups) {
+              store.commit('setLineups', data.lineups)
+            }
             minPlays.value = data.minPlays
             saveData()
             alert('Team data imported successfully!')
@@ -165,16 +252,113 @@ export default {
     }
 
     const clearEntireTeam = () => {
-      if (confirm('Are you sure you want to remove the entire team and all data? This action cannot be undone.')) {
+      if (confirm('Are you sure you want to remove the entire team, all plays, and all lineups? This action cannot be undone.')) {
         store.commit('clearAllData')
+        store.commit('clearLineups') // New mutation to clear lineups
         minPlays.value = 12 // Reset to default
         saveData()
-        alert('The entire team and all data have been removed.')
+        alert('The entire team, all plays, and all lineups have been removed.')
       }
+    }
+
+    const togglePlayerInLineup = (playerNumber) => {
+      const index = newLineupPlayers.value.indexOf(playerNumber)
+      if (index > -1) {
+        newLineupPlayers.value.splice(index, 1)
+      } else if (newLineupPlayers.value.length < 11) {
+        newLineupPlayers.value.push(playerNumber)
+      }
+    }
+
+    const togglePlayerInEditingLineup = (playerNumber) => {
+      if (editingLineupIndex.value === null) return
+      const lineup = lineups.value[editingLineupIndex.value]
+      const index = lineup.players.indexOf(playerNumber)
+      if (index > -1) {
+        lineup.players.splice(index, 1)
+      } else if (lineup.players.length < 11) {
+        lineup.players.push(playerNumber)
+      }
+    }
+
+    const canSaveLineup = computed(() => 
+      newLineupName.value.trim() !== '' && 
+      newLineupPlayers.value.length > 0 && 
+      newLineupPlayers.value.length <= 11
+    )
+
+    const canUpdateLineup = computed(() => 
+      editingLineupIndex.value !== null &&
+      lineups.value[editingLineupIndex.value].name.trim() !== '' && 
+      lineups.value[editingLineupIndex.value].players.length > 0 && 
+      lineups.value[editingLineupIndex.value].players.length <= 11
+    )
+
+    const saveLineup = () => {
+      store.commit('addLineup', {
+        name: newLineupName.value,
+        players: newLineupPlayers.value
+      })
+      closeLineupModal()
+      saveData()
+    }
+
+    const updateLineup = () => {
+      if (editingLineupIndex.value === null) return
+      store.commit('updateLineup', {
+        index: editingLineupIndex.value,
+        lineup: lineups.value[editingLineupIndex.value]
+      })
+      closeEditLineupModal()
+      saveData()
+    }
+
+    const deleteLineup = () => {
+      if (editingLineupIndex.value === null) return
+      if (confirm('Are you sure you want to delete this lineup?')) {
+        store.commit('deleteLineup', editingLineupIndex.value)
+        closeEditLineupModal()
+        saveData()
+      }
+    }
+
+    const closeLineupModal = () => {
+      showLineupModal.value = false
+      newLineupName.value = ''
+      newLineupPlayers.value = []
+    }
+
+    const closeEditLineupModal = () => {
+      showEditLineupModal.value = false
+      editingLineupIndex.value = null
+    }
+
+    const editPlayerLineups = (playerNumber) => {
+      editingPlayerNumber.value = playerNumber
+      showPlayerLineupsModal.value = true
+    }
+
+    const removePlayerFromLineup = (lineupIndex) => {
+      const lineup = playerLineups.value[lineupIndex]
+      const updatedLineup = {
+        ...lineup,
+        players: lineup.players.filter(p => p !== editingPlayerNumber.value)
+      }
+      const storeIndex = lineups.value.findIndex(l => l.name === lineup.name)
+      if (storeIndex !== -1) {
+        store.commit('updateLineup', { index: storeIndex, lineup: updatedLineup })
+        saveData()
+      }
+    }
+
+    const closePlayerLineupsModal = () => {
+      showPlayerLineupsModal.value = false
+      editingPlayerNumber.value = null
     }
 
     return {
       newPlayer,
+      players,
       sortedPlayers,
       minPlays,
       editMode,
@@ -188,7 +372,28 @@ export default {
       exportTeam,
       importTeam,
       clearAllPlays,
-      clearEntireTeam
+      clearEntireTeam,
+      showLineupModal,
+      showEditLineupModal,
+      showPlayerLineupsModal,
+      newLineupName,
+      newLineupPlayers,
+      editingLineupIndex,
+      lineups,
+      playerLineups,
+      togglePlayerInLineup,
+      togglePlayerInEditingLineup,
+      canSaveLineup,
+      canUpdateLineup,
+      saveLineup,
+      updateLineup,
+      deleteLineup,
+      closeLineupModal,
+      closeEditLineupModal,
+      editPlayerLineups,
+      removePlayerFromLineup,
+      closePlayerLineupsModal,
+      editingPlayerNumber
     }
   }
 }
@@ -202,10 +407,21 @@ export default {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+h2, h3 {
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
 .player-form {
   display: grid;
   gap: 1rem;
   margin-bottom: 2rem;
+}
+
+.player-form input {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
 }
 
 .team-roster ul {
@@ -227,6 +443,21 @@ export default {
 
 .min-plays {
   margin-bottom: 1rem;
+}
+
+.min-plays input {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-weight: bold;
 }
 
 .save-team-button {
@@ -253,10 +484,6 @@ export default {
   flex: 1;
   padding: 0.75rem;
   font-size: 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.1s;
 }
 
 .export-button {
@@ -277,16 +504,8 @@ export default {
   background-color: #2a3d50;
 }
 
-.export-button:active, .import-button:active {
-  transform: scale(0.98);
-}
-
 .clear-data {
   margin-top: 2rem;
-}
-
-.clear-data h3 {
-  margin-bottom: 1rem;
 }
 
 .clear-plays-button, .clear-team-button {
@@ -294,10 +513,6 @@ export default {
   padding: 0.75rem;
   font-size: 1.1rem;
   color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
   margin-bottom: 1rem;
 }
 
@@ -344,17 +559,119 @@ export default {
   background-color: #c13c3c;
 }
 
-@media (max-width: 480px) {
+.edit-lineups-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.edit-lineups-button:hover {
+  background-color: #2a3d50;
+}
+
+.lineup-management {
+  margin-top: 2rem;
+}
+
+.create-lineup-button, .edit-lineup-button {
+  width: 48%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  margin-right: 2%;
+}
+
+.create-lineup-button {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.create-lineup-button:hover {
+  background-color: #35a581;
+}
+
+.edit-lineup-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.edit-lineup-button:hover {
+  background-color: #2a3d50;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 80%;
+  max-height: 80%;
+  overflow-y: auto;
+}
+
+.player-selection {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.player-selection button {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--background-color);
+  cursor: pointer;
+}
+
+.player-selection button.selected {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.modal-content select, .modal-content input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.modal-content button {
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
   .team-setup {
     padding: 1rem;
   }
 
-  .export-import {
+  .export-import, .lineup-management {
     flex-direction: column;
   }
-  
-  .export-button, .import-button {
+
+  .export-button, .import-button, .create-lineup-button, .edit-lineup-button {
     width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-content {
+    max-width: 95%;
+    max-height: 95%;
+    padding: 1rem;
+  }
+
+  .player-selection {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
 }
 </style>

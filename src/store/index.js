@@ -1,3 +1,4 @@
+// src/store/index.js
 import { createStore } from 'vuex'
 
 export default createStore({
@@ -7,7 +8,8 @@ export default createStore({
     currentPlay: [],
     playHistory: [],
     playerPlayCounts: {},
-    selectedPlayers: []
+    selectedPlayers: [],
+    lineups: []
   },
   mutations: {
     addPlayer(state, player) {
@@ -55,16 +57,32 @@ export default createStore({
       state.playHistory = []
       state.playerPlayCounts = {}
       state.selectedPlayers = []
+      state.lineups = []
     },
     setSelectedPlayers(state, players) {
       state.selectedPlayers = players
+    },
+    addLineup(state, lineup) {
+      state.lineups.push(lineup)
+    },
+    updateLineup(state, { index, lineup }) {
+      state.lineups.splice(index, 1, lineup)
+    },
+    deleteLineup(state, index) {
+      state.lineups.splice(index, 1)
+    },
+    setLineups(state, lineups) {
+      state.lineups = lineups
+    },
+    clearLineups(state) {
+      state.lineups = []
     }
   },
   actions: {
     initializeStore({ commit }) {
       const storedData = localStorage.getItem('teamData')
       if (storedData) {
-        const { players, minPlays, playerPlayCounts, selectedPlayers } = JSON.parse(storedData)
+        const { players, minPlays, playerPlayCounts, selectedPlayers, lineups } = JSON.parse(storedData)
         commit('setPlayers', players)
         commit('setMinPlays', minPlays)
         if (playerPlayCounts) {
@@ -75,6 +93,9 @@ export default createStore({
         if (selectedPlayers) {
           commit('setSelectedPlayers', selectedPlayers)
         }
+        if (lineups) {
+          commit('setLineups', lineups)
+        }
       }
     },
     saveToLocalStorage({ state }) {
@@ -82,13 +103,17 @@ export default createStore({
         players: state.players,
         minPlays: state.minPlays,
         playerPlayCounts: state.playerPlayCounts,
-        selectedPlayers: state.selectedPlayers
+        selectedPlayers: state.selectedPlayers,
+        lineups: state.lineups
       }))
     }
   },
   getters: {
     playerPlayCount: (state) => (playerNumber) => {
       return state.playerPlayCounts[playerNumber] || 0
+    },
+    getLineupsByPlayer: (state) => (playerNumber) => {
+      return state.lineups.filter(lineup => lineup.players.includes(playerNumber))
     }
   }
 })

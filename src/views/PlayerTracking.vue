@@ -1,12 +1,16 @@
+<!-- src/views/PlayerTracking.vue -->
 <template>
   <div class="player-tracking">
-    <h2>Player Tracking</h2>
-    <div class="tracking-mode">
-      <label class="switch">
-        <input type="checkbox" v-model="isOnField">
-        <span class="slider round"></span>
-      </label>
-      <span>{{ isOnField ? 'On Field' : 'On Bench' }}</span>
+    <div class="tracking-controls">
+      <div class="tracking-mode">
+        <span class="mode-label">On Field</span>
+        <label class="switch">
+          <input type="checkbox" v-model="isOnBench">
+          <span class="slider round"></span>
+        </label>
+        <span class="mode-label">On Bench</span>
+      </div>
+      <button @click="showLoadLineupModal = true" class="load-lineup-button">Load Lineup</button>
     </div>
     <div class="player-grid-container" ref="gridContainer">
       <div class="player-grid" :style="gridStyle">
@@ -25,6 +29,20 @@
       <button @click="viewTeamMPR" class="view-mpr-button">View Team MPR</button>
     </div>
     <div v-if="showSaved" class="saved-message">Saved</div>
+
+    <!-- Load Lineup Modal -->
+    <div v-if="showLoadLineupModal" class="modal">
+      <div class="modal-content">
+        <h3>Load Lineup</h3>
+        <select v-model="selectedLineupIndex">
+          <option v-for="(lineup, index) in lineups" :key="index" :value="index">
+            {{ lineup.name }}
+          </option>
+        </select>
+        <button @click="loadLineup" :disabled="selectedLineupIndex === null">Load</button>
+        <button @click="closeLoadLineupModal">Cancel</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -40,10 +58,12 @@ export default {
     const router = useRouter()
     const saveData = inject('saveData')
 
-    const isOnField = ref(true)
+    const isOnBench = ref(false)
     const gridContainer = ref(null)
     const gridStyle = ref({})
     const showSaved = ref(false)
+    const showLoadLineupModal = ref(false)
+    const selectedLineupIndex = ref(null)
     
     const selectedPlayers = computed({
       get: () => store.state.selectedPlayers,
@@ -52,6 +72,7 @@ export default {
 
     const players = computed(() => store.state.players)
     const minPlays = computed(() => store.state.minPlays)
+    const lineups = computed(() => store.state.lineups)
 
     const sortedActivePlayers = computed(() => {
       return players.value
@@ -78,14 +99,14 @@ export default {
     }
 
     const savePlay = () => {
-      const activeCount = isOnField.value ? selectedPlayers.value.length : sortedActivePlayers.value.length - selectedPlayers.value.length
+      const activeCount = !isOnBench.value ? selectedPlayers.value.length : sortedActivePlayers.value.length - selectedPlayers.value.length
       
       if (activeCount > 11) {
         const confirmed = confirm("There are more than 11 players on the field. Do you want to proceed?")
         if (!confirmed) return
       }
       
-      const playersToUpdate = isOnField.value ? selectedPlayers.value : sortedActivePlayers.value.filter(player => !selectedPlayers.value.includes(player.number)).map(player => player.number)
+      const playersToUpdate = !isOnBench.value ? selectedPlayers.value : sortedActivePlayers.value.filter(player => !selectedPlayers.value.includes(player.number)).map(player => player.number)
       
       store.commit('savePlay', playersToUpdate)
       saveData()
@@ -132,6 +153,22 @@ export default {
       }
     }
 
+    const loadLineup = () => {
+      if (selectedLineupIndex.value === null) return
+      const lineup = lineups.value[selectedLineupIndex.value]
+      const newSelectedPlayers = new Set(selectedPlayers.value)
+      lineup.players.forEach(playerNumber => {
+        newSelectedPlayers.add(playerNumber)
+      })
+      selectedPlayers.value = Array.from(newSelectedPlayers)
+      closeLoadLineupModal()
+    }
+
+    const closeLoadLineupModal = () => {
+      showLoadLineupModal.value = false
+      selectedLineupIndex.value = null
+    }
+
     onMounted(() => {
       updateGridLayout()
       window.addEventListener('resize', updateGridLayout)
@@ -142,12 +179,12 @@ export default {
     })
 
     watch(sortedActivePlayers, updateGridLayout)
-    watch(isOnField, () => {
+    watch(isOnBench, () => {
       selectedPlayers.value = []
     })
 
     return {
-      isOnField,
+      isOnBench,
       sortedActivePlayers,
       isPlayerActive,
       togglePlayer,
@@ -155,7 +192,12 @@ export default {
       viewTeamMPR,
       gridContainer,
       gridStyle,
-      showSaved
+      showSaved,
+      showLoadLineupModal,
+      selectedLineupIndex,
+      lineups,
+      loadLineup,
+      closeLoadLineupModal
     }
   }
 }
@@ -174,21 +216,19 @@ export default {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   position: relative;
+  padding: 1rem;
 }
 
-h2 {
-  color: var(--text-color);
-  margin: 0.5rem 0;
-  padding: 0 0.5rem;
+.tracking-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
 .tracking-mode {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-  padding: 0 0.5rem;
 }
 
 .switch {
@@ -196,6 +236,7 @@ h2 {
   display: inline-block;
   width: 60px;
   height: 34px;
+  margin: 0 10px;
 }
 
 .switch input {
@@ -211,7 +252,7 @@ h2 {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: var(--primary-color);
   transition: .4s;
 }
 
@@ -227,7 +268,7 @@ h2 {
 }
 
 input:checked + .slider {
-  background-color: var(--primary-color);
+  background-color: #ccc;
 }
 
 input:checked + .slider:before {
@@ -242,11 +283,23 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
+.mode-label {
+  font-weight: bold;
+}
+
+.load-lineup-button {
+  padding: 0.5rem 1rem;
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
 .player-grid-container {
   flex-grow: 1;
   overflow-y: auto;
-  margin-bottom: 0.5rem;
-  padding: 0 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .player-grid {
@@ -285,7 +338,6 @@ input:checked + .slider:before {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.5rem;
 }
 
 .save-button, .view-mpr-button {
@@ -334,6 +386,41 @@ input:checked + .slider:before {
   50% { opacity: 1; }
 }
 
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 400px;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+}
+
+.modal-content select {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.modal-content button {
+  margin-right: 0.5rem;
+}
+
 @media (max-width: 768px) {
   .player-grid button {
     font-size: 1.2rem;
@@ -342,7 +429,7 @@ input:checked + .slider:before {
 
 @media (max-width: 480px) {
   .player-tracking {
-    padding: 0.25rem;
+    padding: 0.5rem;
   }
 
   .player-grid button {
