@@ -98,16 +98,25 @@
 
     <!-- Edit Player Lineups Modal -->
     <div v-if="showPlayerLineupsModal" class="modal">
-      <div class="modal-content">
+      <div class="modal-content player-lineups-modal">
         <h3>Edit Player Lineups</h3>
-        <p>Player: {{ players.find(p => p.number === editingPlayerNumber)?.firstName }} {{ players.find(p => p.number === editingPlayerNumber)?.lastName }}</p>
-        <ul>
-          <li v-for="(lineup, index) in playerLineups" :key="index">
-            {{ lineup.name }}
-            <button @click="removePlayerFromLineup(index)" class="remove-button">Remove from Lineup</button>
-          </li>
-        </ul>
-        <button @click="closePlayerLineupsModal" class="update-button">Update</button>
+        <p class="player-name">
+          {{ players.find(p => p.number === editingPlayerNumber)?.firstName }}
+          {{ players.find(p => p.number === editingPlayerNumber)?.lastName }}
+          ({{ editingPlayerNumber }})
+        </p>
+        <div class="lineup-list">
+          <div v-if="playerLineups.length === 0" class="no-lineups">
+            This player is not in any lineups.
+          </div>
+          <div v-else v-for="(lineup, index) in playerLineups" :key="index" class="lineup-item">
+            <span class="lineup-name">{{ lineup.name }}</span>
+            <button @click="removePlayerFromLineup(index)" class="remove-button">Remove</button>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button @click="closePlayerLineupsModal" class="ok-button">OK</button>
+        </div>
       </div>
     </div>
   </div>
@@ -658,19 +667,78 @@ h2, h3 {
   margin-right: 0.5rem;
 }
 
-.update-button {
-  background-color: var(--success-color);
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.player-lineups-modal {
+  width: 100%;
+  max-width: 500px;
 }
 
-.update-button:hover {
-  background-color: #35a581;
+.player-name {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
 }
+
+.lineup-list {
+  margin-bottom: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.no-lineups {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-color);
+}
+
+.lineup-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.lineup-item:last-child {
+  border-bottom: none;
+}
+
+.lineup-name {
+  font-weight: 500;
+}
+
+.lineup-item .remove-button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9em;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.update-button {
+  padding: 0.5rem 1rem;
+  font-size: 1em;
+}
+
+.ok-button {
+    padding: 0.5rem 1rem;
+    font-size: 1em;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .ok-button:hover {
+    background-color: #2a3d50;
+  }
 
 @media (max-width: 768px) {
   .team-setup {

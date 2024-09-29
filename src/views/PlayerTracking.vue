@@ -1,4 +1,4 @@
-<!-- src/views/PlayerTracking.vue -->
+
 <template>
   <div class="player-tracking">
     <div class="tracking-controls">
