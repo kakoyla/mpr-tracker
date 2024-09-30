@@ -32,17 +32,24 @@
 
     <!-- Load Lineup Modal -->
     <div v-if="showLoadLineupModal" class="modal">
-      <div class="modal-content">
-        <h3>Load Lineup</h3>
-        <select v-model="selectedLineupIndex">
-          <option v-for="(lineup, index) in lineups" :key="index" :value="index">
-            {{ lineup.name }}
-          </option>
-        </select>
-        <button @click="loadLineup" :disabled="selectedLineupIndex === null">Load</button>
-        <button @click="closeLoadLineupModal">Cancel</button>
+    <div class="modal-content">
+      <h3>Load Lineup</h3>
+      <select v-model="selectedLineupIndex">
+        <option v-for="(lineup, index) in lineups" :key="index" :value="index">
+          {{ lineup.name }} ({{ lineup.players.length }} players)
+        </option>
+      </select>
+      <div class="lineup-info">
+        <p><strong>Note:</strong></p>
+        <ul>
+          <li>Loading a lineup with 11 players will deselect all current players and activate only those in the chosen lineup.</li>
+          <li>Loading a lineup with fewer than 11 players will keep currently active players and additionally activate the players in the chosen lineup.</li>
+        </ul>
       </div>
+      <button @click="loadLineup" :disabled="selectedLineupIndex === null">Load</button>
+      <button @click="closeLoadLineupModal">Cancel</button>
     </div>
+  </div>
   </div>
 </template>
 
@@ -156,11 +163,19 @@ export default {
     const loadLineup = () => {
       if (selectedLineupIndex.value === null) return
       const lineup = lineups.value[selectedLineupIndex.value]
-      const newSelectedPlayers = new Set(selectedPlayers.value)
-      lineup.players.forEach(playerNumber => {
-        newSelectedPlayers.add(playerNumber)
-      })
-      selectedPlayers.value = Array.from(newSelectedPlayers)
+      
+      if (lineup.players.length === 11) {
+        // If the lineup has exactly 11 players, replace all current selections
+        selectedPlayers.value = [...lineup.players]
+      } else {
+        // If the lineup has less than 11 players, add them to the current selection
+        const newSelectedPlayers = new Set(selectedPlayers.value)
+        lineup.players.forEach(playerNumber => {
+          newSelectedPlayers.add(playerNumber)
+        })
+        selectedPlayers.value = Array.from(newSelectedPlayers)
+      }
+      
       closeLoadLineupModal()
     }
 
@@ -443,5 +458,23 @@ input:checked + .slider:before {
   .save-button, .view-mpr-button {
     width: 100%;
   }
+
+  .lineup-info {
+  background-color: #f0f4f8;
+  border: 1px solid #d1e1ff;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+  font-size: 0.9em;
+}
+
+.lineup-info ul {
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.lineup-info li {
+  margin-bottom: 0.5rem;
+}
 }
 </style>
