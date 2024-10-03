@@ -1,4 +1,4 @@
-// src/store/index.js
+
 import { createStore } from 'vuex'
 
 export default createStore({
@@ -49,6 +49,7 @@ export default createStore({
       state.currentPlay = []
       state.playHistory = []
       state.playerPlayCounts = {}
+      // Note: We're not clearing selectedPlayers here
     },
     clearAllData(state) {
       state.players = []
@@ -60,6 +61,9 @@ export default createStore({
       state.lineups = []
     },
     setSelectedPlayers(state, players) {
+      state.selectedPlayers = players
+    },
+    updateSelectedPlayers(state, players) {
       state.selectedPlayers = players
     },
     addLineup(state, lineup) {
@@ -106,6 +110,9 @@ export default createStore({
         selectedPlayers: state.selectedPlayers,
         lineups: state.lineups
       }))
+    },
+    updateSelectedPlayers({ commit }, players) {
+      commit('updateSelectedPlayers', players)
     }
   },
   getters: {
@@ -114,6 +121,11 @@ export default createStore({
     },
     getLineupsByPlayer: (state) => (playerNumber) => {
       return state.lineups.filter(lineup => lineup.players.includes(playerNumber))
+    },
+    onBenchPlayers: (state) => {
+      return state.players
+        .filter(player => !state.selectedPlayers.includes(player.number))
+        .map(player => player.number)
     }
   }
 })

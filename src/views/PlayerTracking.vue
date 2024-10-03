@@ -1,4 +1,3 @@
-
 <template>
   <div class="player-tracking">
     <div class="tracking-controls">
@@ -12,13 +11,23 @@
       </div>
       <button @click="showLoadLineupModal = true" class="load-lineup-button">Load Lineup</button>
     </div>
+    <div class="action-buttons">
+      <button @click="clearAllActive" class="clear-all-button">
+        {{ isOnBench ? 'Clear All Bench Players' : 'Move All to Bench' }}
+      </button>
+      <span class="active-count">Active On-Field Players: {{ activeOnFieldCount }}</span>
+    </div>
     <div class="player-grid-container" ref="gridContainer">
       <div class="player-grid" :style="gridStyle">
         <button 
-          v-for="player in sortedActivePlayers" 
+          v-for="player in sortedDisplayedPlayers" 
           :key="player.number"
           @click="togglePlayer(player.number)"
-          :class="{ active: isPlayerActive(player.number) }"
+          :class="{ 
+            active: isPlayerActive(player.number), 
+            ineligible: !eligiblePlayers.map(p => p.number).includes(player.number)
+          }"
+          :disabled="!isOnBench && !eligiblePlayers.map(p => p.number).includes(player.number)"
         >
           {{ player.number }}
         </button>
@@ -32,24 +41,24 @@
 
     <!-- Load Lineup Modal -->
     <div v-if="showLoadLineupModal" class="modal">
-    <div class="modal-content">
-      <h3>Load Lineup</h3>
-      <select v-model="selectedLineupIndex">
-        <option v-for="(lineup, index) in lineups" :key="index" :value="index">
-          {{ lineup.name }} ({{ lineup.players.length }} players)
-        </option>
-      </select>
-      <div class="lineup-info">
-        <p><strong>Note:</strong></p>
-        <ul>
-          <li>Loading a lineup with 11 players will deselect all current players and activate only those in the chosen lineup.</li>
-          <li>Loading a lineup with fewer than 11 players will keep currently active players and additionally activate the players in the chosen lineup.</li>
-        </ul>
+      <div class="modal-content">
+        <h3>Load Lineup</h3>
+        <select v-model="selectedLineupIndex">
+          <option v-for="(lineup, index) in lineups" :key="index" :value="index">
+            {{ lineup.name }} ({{ lineup.players.length }} players)
+          </option>
+        </select>
+        <div class="lineup-info">
+          <p><strong>Note:</strong></p>
+          <ul>
+            <li>Loading a lineup with 11 players will set all other eligible players to bench.</li>
+            <li>Loading a lineup with fewer than 11 players will move those players to the field if they were on the bench.</li>
+          </ul>
+        </div>
+        <button @click="loadLineup" :disabled="selectedLineupIndex === null">Load</button>
+        <button @click="closeLoadLineupModal">Cancel</button>
       </div>
-      <button @click="loadLineup" :disabled="selectedLineupIndex === null">Load</button>
-      <button @click="closeLoadLineupModal">Cancel</button>
     </div>
-  </div>
   </div>
 </template>
 
@@ -71,59 +80,64 @@ export default {
     const showSaved = ref(false)
     const showLoadLineupModal = ref(false)
     const selectedLineupIndex = ref(null)
-    
-    const selectedPlayers = computed({
-      get: () => store.state.selectedPlayers,
-      set: (value) => store.commit('setSelectedPlayers', value)
-    })
 
     const players = computed(() => store.state.players)
     const minPlays = computed(() => store.state.minPlays)
     const lineups = computed(() => store.state.lineups)
+    
+    const selectedPlayers = computed({
+      get: () => store.state.selectedPlayers,
+      set: (value) => store.dispatch('updateSelectedPlayers', value)
+    })
 
-    const sortedActivePlayers = computed(() => {
-      return players.value
-        .filter(player => {
-          const playCount = store.getters.playerPlayCount(player.number)
-          return playCount < minPlays.value
-        })
+    const onBenchPlayers = computed(() => store.getters.onBenchPlayers)
+
+    const eligiblePlayers = computed(() => 
+      players.value.filter(player => {
+        const playCount = store.getters.playerPlayCount(player.number)
+        return playCount < minPlays.value
+      })
+    )
+
+    const activeOnFieldCount = computed(() => selectedPlayers.value.length)
+
+    const sortedDisplayedPlayers = computed(() => {
+      return (isOnBench.value ? players.value : eligiblePlayers.value)
         .sort((a, b) => a.number - b.number)
     })
 
     const isPlayerActive = (number) => {
-      return selectedPlayers.value.includes(number)
+      return isOnBench.value ? onBenchPlayers.value.includes(number) : selectedPlayers.value.includes(number)
     }
 
     const togglePlayer = (number) => {
-      const newSelectedPlayers = [...selectedPlayers.value]
-      const index = newSelectedPlayers.indexOf(number)
+      const updatedPlayers = [...selectedPlayers.value]
+      const index = updatedPlayers.indexOf(number)
       if (index > -1) {
-        newSelectedPlayers.splice(index, 1)
+        updatedPlayers.splice(index, 1)
       } else {
-        newSelectedPlayers.push(number)
+        updatedPlayers.push(number)
       }
-      selectedPlayers.value = newSelectedPlayers
+      store.dispatch('updateSelectedPlayers', updatedPlayers)
+    }
+
+    const clearAllActive = () => {
+      if (isOnBench.value) {
+        store.dispatch('updateSelectedPlayers', eligiblePlayers.value.map(player => player.number))
+      } else {
+        store.dispatch('updateSelectedPlayers', [])
+      }
     }
 
     const savePlay = () => {
-      const activeCount = !isOnBench.value ? selectedPlayers.value.length : sortedActivePlayers.value.length - selectedPlayers.value.length
-      
-      if (activeCount > 11) {
+      if (selectedPlayers.value.length > 11) {
         const confirmed = confirm("There are more than 11 players on the field. Do you want to proceed?")
         if (!confirmed) return
       }
       
-      const playersToUpdate = !isOnBench.value ? selectedPlayers.value : sortedActivePlayers.value.filter(player => !selectedPlayers.value.includes(player.number)).map(player => player.number)
-      
-      store.commit('savePlay', playersToUpdate)
+      store.commit('savePlay', selectedPlayers.value)
       saveData()
       updateGridLayout()
-
-      // Remove players who have completed their requirements
-      selectedPlayers.value = selectedPlayers.value.filter(number => {
-        const playCount = store.getters.playerPlayCount(number)
-        return playCount < minPlays.value
-      })
 
       // Show "Saved" message
       showSaved.value = true
@@ -141,7 +155,7 @@ export default {
 
       const containerWidth = gridContainer.value.clientWidth
       const containerHeight = gridContainer.value.clientHeight
-      const playerCount = sortedActivePlayers.value.length
+      const playerCount = sortedDisplayedPlayers.value.length
 
       let columns = Math.ceil(Math.sqrt(playerCount))
       let rows = Math.ceil(playerCount / columns)
@@ -165,15 +179,15 @@ export default {
       const lineup = lineups.value[selectedLineupIndex.value]
       
       if (lineup.players.length === 11) {
-        // If the lineup has exactly 11 players, replace all current selections
-        selectedPlayers.value = [...lineup.players]
+        // If the lineup has exactly 11 players, set these as selected players
+        store.dispatch('updateSelectedPlayers', lineup.players)
       } else {
         // If the lineup has less than 11 players, add them to the current selection
         const newSelectedPlayers = new Set(selectedPlayers.value)
         lineup.players.forEach(playerNumber => {
           newSelectedPlayers.add(playerNumber)
         })
-        selectedPlayers.value = Array.from(newSelectedPlayers)
+        store.dispatch('updateSelectedPlayers', Array.from(newSelectedPlayers))
       }
       
       closeLoadLineupModal()
@@ -193,16 +207,14 @@ export default {
       window.removeEventListener('resize', updateGridLayout)
     })
 
-    watch(sortedActivePlayers, updateGridLayout)
-    watch(isOnBench, () => {
-      selectedPlayers.value = []
-    })
+    watch(sortedDisplayedPlayers, updateGridLayout)
 
     return {
       isOnBench,
-      sortedActivePlayers,
+      sortedDisplayedPlayers,
       isPlayerActive,
       togglePlayer,
+      clearAllActive,
       savePlay,
       viewTeamMPR,
       gridContainer,
@@ -212,7 +224,9 @@ export default {
       selectedLineupIndex,
       lineups,
       loadLineup,
-      closeLoadLineupModal
+      closeLoadLineupModal,
+      activeOnFieldCount,
+      eligiblePlayers
     }
   }
 }
@@ -348,14 +362,20 @@ input:checked + .slider:before {
   color: white;
   border-color: var(--active-color);
 }
+.player-grid button.ineligible {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .action-buttons {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-.save-button, .view-mpr-button {
+.save-button, .view-mpr-button, .clear-all-button {
   flex: 1;
   padding: 0.75rem;
   font-size: 1rem;
@@ -381,6 +401,21 @@ input:checked + .slider:before {
 
 .view-mpr-button:hover {
   background-color: #2a3d50;
+}
+
+.clear-all-button {
+  background-color: var(--error-color);
+  color: white;
+}
+
+.clear-all-button:hover {
+  background-color: #c13c3c;
+}
+
+.active-count {
+  font-weight: bold;
+  margin-left: 1rem;
+  white-space: nowrap;
 }
 
 .saved-message {
@@ -436,9 +471,35 @@ input:checked + .slider:before {
   margin-right: 0.5rem;
 }
 
+.lineup-info {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.lineup-info ul {
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.lineup-info li {
+  margin-bottom: 0.5rem;
+}
+
 @media (max-width: 768px) {
   .player-grid button {
     font-size: 1.2rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .active-count {
+    margin-left: 0;
+    margin-top: 0.5rem;
+    text-align: center;
   }
 }
 
@@ -451,30 +512,8 @@ input:checked + .slider:before {
     font-size: 1rem;
   }
 
-  .action-buttons {
-    flex-direction: column;
-  }
-
-  .save-button, .view-mpr-button {
+  .save-button, .view-mpr-button, .clear-all-button {
     width: 100%;
   }
-
-  .lineup-info {
-  background-color: #f0f4f8;
-  border: 1px solid #d1e1ff;
-  border-radius: 4px;
-  padding: 1rem;
-  margin: 1rem 0;
-  font-size: 0.9em;
-}
-
-.lineup-info ul {
-  padding-left: 1.5rem;
-  margin-top: 0.5rem;
-}
-
-.lineup-info li {
-  margin-bottom: 0.5rem;
-}
 }
 </style>

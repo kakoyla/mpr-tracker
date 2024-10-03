@@ -1,6 +1,6 @@
 # MPR Tracker
 
-MPR Tracker is a Vue.js application designed to help sports coaches and team managers track Minimum Play Requirements (MPR) for their players.
+MPR Tracker is a Vue.js application designed to help football coaches and team managers track Minimum Play Requirements (MPR) for their players.
 
 ## Features
 
