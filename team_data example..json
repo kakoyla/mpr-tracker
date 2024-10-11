@@ -1,0 +1,183 @@
+{
+  "players": [
+    {
+      "firstName": "Jack",
+      "lastName": "Thompson",
+      "number": 7
+    },
+    {
+      "firstName": "Miguel",
+      "lastName": "Rodriguez",
+      "number": 23
+    },
+    {
+      "firstName": "Liam",
+      "lastName": "Chen",
+      "number": 42
+    },
+    {
+      "firstName": "Ethan",
+      "lastName": "Patel",
+      "number": 15
+    },
+    {
+      "firstName": "Noah",
+      "lastName": "Kim",
+      "number": 88
+    },
+    {
+      "firstName": "Carlos",
+      "lastName": "Nguyen",
+      "number": 31
+    },
+    {
+      "firstName": "James",
+      "lastName": "Singh",
+      "number": 54
+    },
+    {
+      "firstName": "Tyrone",
+      "lastName": "Johnson",
+      "number": 9
+    },
+    {
+      "firstName": "Mason",
+      "lastName": "Garcia",
+      "number": 76
+    },
+    {
+      "firstName": "William",
+      "lastName": "Brown",
+      "number": 12
+    },
+    {
+      "firstName": "Alexander",
+      "lastName": "Davis",
+      "number": 67
+    },
+    {
+      "firstName": "Daniel",
+      "lastName": "Wilson",
+      "number": 3
+    },
+    {
+      "firstName": "Michael",
+      "lastName": "Taylor",
+      "number": 99
+    },
+    {
+      "firstName": "Samuel",
+      "lastName": "Anderson",
+      "number": 28
+    },
+    {
+      "firstName": "David",
+      "lastName": "Martinez",
+      "number": 50
+    },
+    {
+      "firstName": "Joseph",
+      "lastName": "Lee",
+      "number": 18
+    },
+    {
+      "firstName": "John",
+      "lastName": "Clark",
+      "number": 72
+    },
+    {
+      "firstName": "DeShawn",
+      "lastName": "Wright",
+      "number": 36
+    },
+    {
+      "firstName": "Dylan",
+      "lastName": "Walker",
+      "number": 61
+    },
+    {
+      "firstName": "Luke",
+      "lastName": "Hall",
+      "number": 5
+    },
+    {
+      "firstName": "Gabriel",
+      "lastName": "Allen",
+      "number": 84
+    },
+    {
+      "firstName": "Anthony",
+      "lastName": "Young",
+      "number": 20
+    },
+    {
+      "firstName": "Isaac",
+      "lastName": "King",
+      "number": 45
+    },
+    {
+      "firstName": "Javier",
+      "lastName": "Scott",
+      "number": 11
+    },
+    {
+      "firstName": "Andrew",
+      "lastName": "Green",
+      "number": 93
+    }
+  ],
+  "minPlays": 12,
+  "playerPlayCounts": {},
+  "lineups": [
+    {
+      "name": "1st Backs",
+      "players": [
+        7,
+        23,
+        42,
+        15
+      ]
+    },
+    {
+      "name": "2nd Backs",
+      "players": [
+        88,
+        31,
+        54,
+        9
+      ]
+    },
+    {
+      "name": "1st Offense ",
+      "players": [
+        3,
+        11,
+        23,
+        36,
+        45,
+        50,
+        84,
+        76,
+        72,
+        67,
+        61
+      ]
+    },
+    {
+      "name": "1st Defense ",
+      "players": [
+        99,
+        93,
+        76,
+        72,
+        54,
+        50,
+        36,
+        42,
+        20,
+        3,
+        9
+      ]
+    }
+  ]
+}
