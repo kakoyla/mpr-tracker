@@ -2,6 +2,8 @@
 
 MPR Tracker is a Vue.js application designed to help football coaches and team managers track Minimum Play Requirements (MPR) for their players.
 
+Try it now: [MPR Tracker App](https://kakoyla.github.io/mpr-tracker/#/)
+
 ## Features
 
 - **Player Management**: Add, edit, and remove players from your team roster.
@@ -10,6 +12,7 @@ MPR Tracker is a Vue.js application designed to help football coaches and team m
 - **MPR Monitoring**: View and manage each player's progress towards meeting their minimum play requirements.
 - **Data Import/Export**: Ability to export team data and import it back, facilitating data backup and transfer between devices.
 - **Responsive Design**: Works on both desktop and mobile devices for on-the-go tracking.
+- **Undo Last Play**: Reverse the most recently saved play to correct errors or adjust for game changes.
 
 ## How to Use
 
@@ -23,6 +26,7 @@ MPR Tracker is a Vue.js application designed to help football coaches and team m
    - Click on player numbers to mark them as active for the current play.
    - Use the "Load Lineup" feature to quickly select a pre-defined group of players.
    - Click "Save Play" to record the current set of active players.
+   - Click "Undo Last Play" to reverse the most recently saved play, for correcting errors, adapting to last-minute changes, or adjusting for flags on the play.
 
 3. **View Team MPR**:
    - Check the progress of each player towards their minimum play requirement.
@@ -33,7 +37,14 @@ MPR Tracker is a Vue.js application designed to help football coaches and team m
    - Use the Import feature to load previously saved team data.
    - Clear all plays or remove the entire team as needed.
 
-## Installation
+## Example Roster
+
+To help you get started or test the import feature, we've provided an example roster file:
+[Example Team Data (JSON)](./team_data_example.json)
+
+You can download this file and use it to test the import functionality or as a template for creating your own team data.
+
+## Installation for Local Development
 
 1. Clone the repository:
    ```
