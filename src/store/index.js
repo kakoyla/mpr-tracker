@@ -1,4 +1,3 @@
-
 import { createStore } from 'vuex'
 
 export default createStore({
@@ -80,6 +79,16 @@ export default createStore({
     },
     clearLineups(state) {
       state.lineups = []
+    },
+    undoLastPlay(state) {
+      if (state.playHistory.length > 0) {
+        const lastPlay = state.playHistory.pop()
+        lastPlay.forEach(playerNumber => {
+          if (state.playerPlayCounts[playerNumber] > 0) {
+            state.playerPlayCounts[playerNumber]--
+          }
+        })
+      }
     }
   },
   actions: {
@@ -113,6 +122,10 @@ export default createStore({
     },
     updateSelectedPlayers({ commit }, players) {
       commit('updateSelectedPlayers', players)
+    },
+    undoLastPlay({ commit, dispatch }) {
+      commit('undoLastPlay')
+      dispatch('saveToLocalStorage')
     }
   },
   getters: {
@@ -126,6 +139,9 @@ export default createStore({
       return state.players
         .filter(player => !state.selectedPlayers.includes(player.number))
         .map(player => player.number)
+    },
+    canUndoPlay: (state) => {
+      return state.playHistory.length > 0
     }
   }
 })

@@ -35,6 +35,7 @@
     </div>
     <div class="action-buttons">
       <button @click="savePlay" class="save-button">Save Play</button>
+      <button @click="undoLastPlay" class="undo-button" :disabled="!canUndoPlay">Undo Last Play</button>
       <button @click="viewTeamMPR" class="view-mpr-button">View Team MPR</button>
     </div>
     <div v-if="showSaved" class="saved-message">Saved</div>
@@ -106,6 +107,8 @@ export default {
         .sort((a, b) => a.number - b.number)
     })
 
+    const canUndoPlay = computed(() => store.getters.canUndoPlay)
+
     const isPlayerActive = (number) => {
       return isOnBench.value ? onBenchPlayers.value.includes(number) : selectedPlayers.value.includes(number)
     }
@@ -144,6 +147,11 @@ export default {
       setTimeout(() => {
         showSaved.value = false
       }, 1000)
+    }
+
+    const undoLastPlay = () => {
+      store.dispatch('undoLastPlay')
+      updateGridLayout()
     }
 
     const viewTeamMPR = () => {
@@ -216,6 +224,8 @@ export default {
       togglePlayer,
       clearAllActive,
       savePlay,
+      undoLastPlay,
+      canUndoPlay,
       viewTeamMPR,
       gridContainer,
       gridStyle,
@@ -362,6 +372,7 @@ input:checked + .slider:before {
   color: white;
   border-color: var(--active-color);
 }
+
 .player-grid button.ineligible {
   opacity: 0.5;
   cursor: not-allowed;
@@ -375,7 +386,7 @@ input:checked + .slider:before {
   margin-bottom: 1rem;
 }
 
-.save-button, .view-mpr-button, .clear-all-button {
+.save-button, .view-mpr-button, .clear-all-button, .undo-button {
   flex: 1;
   padding: 0.75rem;
   font-size: 1rem;
@@ -410,6 +421,20 @@ input:checked + .slider:before {
 
 .clear-all-button:hover {
   background-color: #c13c3c;
+}
+
+.undo-button {
+  background-color: #f0ad4e;
+  color: white;
+}
+
+.undo-button:hover {
+  background-color: #ec971f;
+}
+
+.undo-button:disabled {
+  background-color: #d9d9d9;
+  cursor: not-allowed;
 }
 
 .active-count {
@@ -496,6 +521,10 @@ input:checked + .slider:before {
     flex-direction: column;
   }
 
+  .save-button, .view-mpr-button, .clear-all-button, .undo-button {
+    width: 100%;
+  }
+
   .active-count {
     margin-left: 0;
     margin-top: 0.5rem;
@@ -510,10 +539,6 @@ input:checked + .slider:before {
 
   .player-grid button {
     font-size: 1rem;
-  }
-
-  .save-button, .view-mpr-button, .clear-all-button {
-    width: 100%;
   }
 }
 </style>
