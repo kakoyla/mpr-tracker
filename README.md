@@ -40,7 +40,7 @@ Try it now: [MPR Tracker App](https://kakoyla.github.io/mpr-tracker/#/)
 ## Example Roster
 
 To help you get started or test the import feature, we've provided an example roster file:
-[Example Team Data (JSON)](/team_data_example.json)
+[Example Team Data (JSON)](team_data example.json)
 
 You can download this file and use it to test the import functionality or as a template for creating your own team data.
 
